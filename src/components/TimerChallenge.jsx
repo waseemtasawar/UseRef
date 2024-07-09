@@ -2,27 +2,34 @@ import React, { useRef, useState } from "react";
 import ResultModel from "./ResultModel";
 
 const TimerChallenge = ({ title, targetTime }) => {
-  const [timerStarted, setTimerStarted] = useState(false);
-  const [timerExpired, setTimerExpired] = useState(false);
-
+  const [timeRemaning, setTimeRemaning] = useState(targetTime * 1000);
   const timer = useRef();
   const dialog = useRef();
+  const timerIsActive = timeRemaning > 0 && timeRemaning < targetTime * 1000;
 
+  if (timeRemaning <= 0) {
+    clearInterval(timer.current);
+    setTimeRemaning(targetTime * 1000);
+    dialog.current.open();
+  }
   function handleStart() {
-    timer.current = setTimerStarted(true);
-    setTimeout(() => {
-      setTimerExpired(true);
-      dialog.current.showModal();
-    }, targetTime * 1000);
+    timer.current = setInterval(() => {
+      setTimeRemaning((prevTimeRemaining) => prevTimeRemaining - 10);
+    }, 10);
   }
 
   function handleStop() {
-    clearTimeout(timer.current);
+    clearInterval(timer.current);
+    dialog.current.open();
   }
 
   return (
     <>
-      <ResultModel ref={dialog} targetTime={targetTime} result="lost" />
+      <ResultModel
+        ref={dialog}
+        targetTime={targetTime}
+        remaningTime={timeRemaning}
+      />
 
       <section className="challenge">
         <h2>{title}</h2>
@@ -30,12 +37,12 @@ const TimerChallenge = ({ title, targetTime }) => {
           {targetTime} second{targetTime > 1 ? "s" : ""}
         </p>
         <p>
-          <button onClick={timerStarted ? handleStop : handleStart}>
-            {timerStarted ? "stop" : "Start"} Challenge
+          <button onClick={timerIsActive ? handleStop : handleStart}>
+            {timerIsActive ? "stop" : "Start"} Challenge
           </button>
         </p>
-        <p className={timerStarted ? "active" : undefined}>
-          {timerStarted ? " Time is Running ..." : " Timer inactive"}
+        <p className={timerIsActive ? "active" : undefined}>
+          {timerIsActive ? " Time is Running ..." : " Timer inactive"}
         </p>
       </section>
     </>
